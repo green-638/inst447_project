@@ -1,0 +1,238 @@
+---
+title: Maryland Drinking Water Quality Violations ETL
+author: Connor Hall,
+subtitle: "Final project for INST447, Spring 2026"
+format: html
+---
+
+# Executive Summary
+
+The text in this section includes:
+
+- overview summary
+- discussion of audience & purpose
+- conclusions/final discussion
+
+
+# Source(s) & Extraction
+
+## Data Source
+The data sources can be downloaded as a .zip from https://echo.epa.gov/tools/data-downloads#downloads
+under the "Drinking Water Data Downloads" section.
+
+## Data Generation and Collection
+
+The data was generated when contaminants entered drinking water. The data is collected by any entity required by the
+Safe Water Drinking Act to enforce drinking water regulations. Each entity reports their data to the EPA, which is
+then stored in the SDWIS Fed Data Warehouse.
+
+Source: https://www.epa.gov/ground-water-and-drinking-water/safe-drinking-water-information-system-sdwis-federal-reporting
+
+## Original Variables
+
+### SDWA_VIOLATIONS_ENFORCEMENT.csv
+- PWSID: Unique code for a public water system. Consists of a two-letter state or region code and 7 digits.
+- VIOLATION_ID: Identifier for a violation.
+- FACILITY_ID: Identifier for a facility in a public water system.
+- NON_COMPL_PER_BEGIN_DATE: Date when violation has been identified.
+- NON_COMPL_PER_END_DATE: Date when violation has ended. Ongoing violations have a null value.
+- CONTAMINANT_CODE: Code representing a contaminant.
+- VIOL_MEASURE: The amount of the contaminant.
+- UNIT_OF_MEASURE: The unit of measure.
+
+### SDWA_FACILITIES.csv
+- PWSID: Unique code for a public water system. Consists of a two-letter state or region code and 7 digits.
+- FACILITY_ID: Identifier for a facility in a public water system.
+- FACILITY_NAME: The name of the facility.
+- FACILITY_ACTIVITY_CODE: A single-letter code identifying the facility's operating status.
+- FACILITY_TYPE_CODE: A two-letter code identifying the type of facility.
+- WATER_TYPE_CODE: A two-letter code identifying the water source.
+
+### SDWA_GEOGRAPHIC_AREAS.csv
+- PWSID: Unique code for a public water system. Consists of a two-letter state or region code and 7 digits.
+- COUNTY_SERVED: The county served by the public water system.
+
+## Shrinking Data
+The original data is large and must be shrunk down. **Do not run this code**. It has already been run and the datasets it created have been provided in the repository.
+The code is here to demonstrate how the data was shrunk.
+
+Each dataset was loaded using read_csv(). The columns of interest were selected with the usecols parameter. The datatype of the FACILITY_ID column in the violations dataframe
+was cast as a string. This will be important later. The violations dataframe's null values and duplicate rows were dropped to shrink the dataframe further.
+
+The PWSID and FACILITY_ID columns uniquely identify public water system facilities. To shrink the facilities and locations dataframes, a list of unique PWSID and FACILITY_ID values were created
+from the violations dataframe. The PWSID and FACILITY_ID columns in the facilities and locations dataframes are strings, so the unique values must also be strings. The dataframes were filtered by selected rows 
+where their values are present in the unique values list.
+
+The dataframes were exported as csv files.
+
+```{python}
+violations = pd.read_csv('SDWA_VIOLATIONS_ENFORCEMENT.csv',
+                         usecols=['PWSID', 'VIOLATION_ID', 'FACILITY_ID', 'NON_COMPL_PER_BEGIN_DATE', 'NON_COMPL_PER_END_DATE',
+                                  'CONTAMINANT_CODE', 'VIOL_MEASURE', 'UNIT_OF_MEASURE'],
+                         dtype={'FACILITY_ID': 'str'}).dropna().drop_duplicates()
+
+
+# get unique PWSID and FACILITY_ID
+sys_id = violations['PWSID'].unique().tolist()
+fac_id = violations['FACILITY_ID'].unique().tolist()
+
+
+facilities = pd.read_csv('SDWA_FACILITIES.csv',
+                         usecols=['PWSID', 'FACILITY_ID', 'FACILITY_NAME',
+                                  'FACILITY_ACTIVITY_CODE', 'FACILITY_TYPE_CODE',
+                                  'WATER_TYPE_CODE'])
+# select rows where PWSID and FACILITY_ID are in violations
+facilities = facilities[facilities['PWSID'].isin(sys_id) & facilities['FACILITY_ID'].isin(fac_id)]
+
+
+locations = pd.read_csv('SDWA_GEOGRAPHIC_AREAS.csv',
+                        usecols=['PWSID', 'COUNTY_SERVED'])
+# select rows where PWSID are in violations
+locations = locations[locations['PWSID'].isin(sys_id)]
+
+
+facilities.to_csv('facilities.csv', index=False)
+locations.to_csv('locations.csv', index=False)
+violations.to_csv('violations.csv', index=False)
+```
+
+## Extracting & Merging
+Each CSV was loaded using read_csv(). The datatype of each dataframe's columns were printed to identify columns with incorrect datatypes. Next, the unique values of columns that
+can be represented categorically were printed to verify that they had a fixed set of values. Datatypes were then changed.
+
+The CONTAMINANT_CODE column in the violations dataframe required additional transformations. This column was formatted as a decimal, but the same column in the contaminant_codes
+dataframe was formatted as a string. To resolve this discrepancy, the violation dataframe's column was cast as a string and the decimal point and following values were replaced with a blank string
+by a regular expression. This method was necessary because some values begin with "0" and converting the column to an integer would remove the "0", therefore altering the contaminant code.
+
+Before merging the dataframes, the contaminant_codes dataframe was filtered. This dataframe contains other reference codes, which were filtered out by selecting rows
+where the VALUE_TYPE column was equal to "CONTAMINANT_CODE". The VALUE_CODE and VALUE_DESCRIPTION columns were then selected.
+
+The dataframes were then merged. The facilities and locations dataframes were inner merged on the PWSID column. The resulting dataframe, merged_df, was inner merged with the violations dataframe
+on the PWSID and FACILITY_ID columns. Lastly, merged_df was left merged with the contaminant_codes dataframe; the left dataframe (merged_df) merged on the "CONTAMINANT_CODE" column and the right dataframe (contaminant_codes) merged on the "VALUE_CODE" column.
+
+```{python}
+import pandas as pd
+
+facilities = pd.read_csv('data/facilities.csv')
+locations = pd.read_csv('data/locations.csv')
+# set dtype to resolve mixed type warning
+violations = pd.read_csv('data/violations.csv', dtype={'VIOLATION_ID': 'str'})
+# set dtype to resolve mixed type warning
+contaminant_codes = pd.read_csv('data/SDWA_REF_CODE_VALUES.csv', dtype={'VALUE_CODE': 'str'})
+
+# output each dataframe's data types 
+print(f'facilities:\n{facilities.dtypes}\n\nlocations:\n{locations.dtypes}\n\nviolations:\n{violations.dtypes}\n\ncodes:\n{contaminant_codes.dtypes}\n')
+
+# view unique values to determine whether category is proper dtype- need small set of fixed values
+print(f'FACILITY_ACTIVITY_CODE: {facilities['FACILITY_ACTIVITY_CODE'].unique()}')
+print(f'FACILITY_TYPE_CODE: {facilities['FACILITY_TYPE_CODE'].unique()}')
+print(f'WATER_TYPE_CODE: {facilities['WATER_TYPE_CODE'].unique()}')
+print(f'CONTAMINANT_CODE: {violations['CONTAMINANT_CODE'].unique()}')
+print(f'UNIT_OF_MEASURE: {violations['UNIT_OF_MEASURE'].unique()}')
+print('\n')
+
+# change dtypes
+facilities = facilities.astype(dtype={'FACILITY_ID': 'str',
+                                'FACILITY_ACTIVITY_CODE': 'category',
+                                'FACILITY_TYPE_CODE': 'category',
+                                'WATER_TYPE_CODE': 'category'})
+
+violations = violations.astype(dtype={'FACILITY_ID': 'str',                   
+                                'NON_COMPL_PER_BEGIN_DATE': 'datetime64[ms]',
+                                'NON_COMPL_PER_END_DATE': 'datetime64[ms]',
+                                'CONTAMINANT_CODE': 'str',
+                                'UNIT_OF_MEASURE': 'category'})
+# remove decimal from CONTAMINANT_CODE                              
+violations['CONTAMINANT_CODE'] = violations['CONTAMINANT_CODE'].str.replace('\.\d+', '', regex=True)                               
+
+# get only contaminant codes
+contaminant_codes = contaminant_codes[contaminant_codes['VALUE_TYPE'] == 'CONTAMINANT_CODE'][['VALUE_CODE', 'VALUE_DESCRIPTION']]
+
+# merge dataframes
+merged_df = pd.merge(facilities, locations, on='PWSID')
+merged_df = pd.merge(merged_df, violations, on=['PWSID', 'FACILITY_ID'])
+merged_df = pd.merge(merged_df, contaminant_codes, how='left', left_on='CONTAMINANT_CODE', right_on='VALUE_CODE')
+print(merged_df)
+```
+
+# Transformation Processes
+
+PWSID is formatted as 2 letters followed by 7 digits. Rows that didn't follow this format were removed by a regular expression that matched
+2 A-Z characters followed by 7 digits from the beginning of the string.
+
+Outliers in the VIOL_MEASURE column were found by finding its minimum and maximum values. The maximum value was 99,999, so the values were investigated further by printing values
+larger than 1000. The resulting set returned a variety of measurements, but 99,999 was a repeated value that had a null VALUE_CODE and VALUE_DESCRIPTION. Rows with this value were removed
+because they are likely incorrect.
+
+The VALUE_CODE column, which originated from the contaminant_codes dataframe, was removed because it is a duplicate of the CONTAMINANT_CODE column.
+
+The columns were reordered and renamed. They were reordered to place similar columns together, such as FACILITY_ID and FACILITY_NAME. The column names were converted to lowercase and
+some were shortened or simplified to make the column's purpose clearer. facility_activity_code in this data is equal to either A (active) or I (inactive), so it was changed to "facility_status".
+non_compl_per_begin_date and non_compl_per_end_date were shortened to "begin_date" and "end_date" respectively. value_description was changed to "contaminant_name" because the values in this
+column are names, not descriptions. viol_measure was changed to "measure". unit_of_measure was changed to "unit" because its values and position next to the measurement column allow its meaning to be assumed.
+
+```{python}
+# PWSID must be 2 letter state/region code and 7 digits
+merged_df = merged_df[merged_df['PWSID'].str.match('[A-Z]{2}\d{7}')]
+
+# find outliers
+print(merged_df['VIOL_MEASURE'].describe())
+print(merged_df[merged_df['VIOL_MEASURE'] > 1000])
+# remove outliers
+merged_df = merged_df[merged_df['VIOL_MEASURE'] < 99999]
+
+# remove VALUE_CODE column- redundant
+merged_df = merged_df.drop(['VALUE_CODE'], axis=1)
+
+# reorder columns
+merged_df = merged_df[['PWSID', 'VIOLATION_ID', 'FACILITY_ID', 'FACILITY_NAME', 'COUNTY_SERVED', 'FACILITY_ACTIVITY_CODE',
+              'FACILITY_TYPE_CODE', 'WATER_TYPE_CODE', 'NON_COMPL_PER_BEGIN_DATE', 'NON_COMPL_PER_END_DATE',
+              'CONTAMINANT_CODE', 'VALUE_DESCRIPTION', 'VIOL_MEASURE', 'UNIT_OF_MEASURE']]
+
+# rename columns
+merged_df.columns = merged_df.columns.str.lower()  
+merged_df = merged_df.rename(columns={'facility_activity_code': 'facility_status',
+                              'non_compl_per_begin_date': 'begin_date',
+                              'non_compl_per_end_date': 'end_date',
+                              'value_description': 'contaminant_name',
+                              'viol_measure': 'measure',
+                              'unit_of_measure': 'unit'})
+                            
+print(merged_df)                              
+```
+
+# Analysis & Evaluation
+
+The text in this section includes:
+
+- descriptions of all variables
+- noteworthy patterns,
+- including discussion of potential sources of bias or unbalanced patterns
+
+You are encouraged to structure this major section into subsections as you wish, and to break up and interweave code chunks, to help with organization and readability.
+
+```{python}
+# The code chunk(s) in this section should include:
+# - descriptive stats for all relevant variables
+# - descriptive stat(s) for any relevant relationships
+# - visualizations for all relevant variables
+# - visualizations for any relevant relationships
+# - code for exploring potential sources of bias, including missing data, unbalanced groups, etc.
+
+
+```
+
+
+# Data Product & Guide
+
+The text in this section includes:
+
+- description and "user's guide" for the final data product
+- general info and description on each variable/column in the data product
+  - note: the descriptive stats, etc. should already be in the Analysis section, but if there are any new/transformed variables that were not in that section, those should have descriptive stats and plots here
+
+```{python}
+# The code chunk(s) in this section should include:
+# - The code needed to "finalize" or "export" the final data product.
+
+```
