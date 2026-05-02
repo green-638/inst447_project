@@ -32,18 +32,18 @@ Source: https://www.epa.gov/ground-water-and-drinking-water/safe-drinking-water-
 
 ### SDWA_VIOLATIONS_ENFORCEMENT.csv
 - PWSID: Unique code for a public water system. Consists of a two-letter state or region code and 7 digits.
-- VIOLATION_ID: Identifier for a violation.
-- FACILITY_ID: Identifier for a facility in a public water system.
-- NON_COMPL_PER_BEGIN_DATE: Date when violation has been identified.
-- NON_COMPL_PER_END_DATE: Date when violation has ended. Ongoing violations have a null value.
-- CONTAMINANT_CODE: Code representing a contaminant.
-- VIOL_MEASURE: The amount of the contaminant.
-- UNIT_OF_MEASURE: The unit of measure.
+- VIOLATION_ID: Identifier for a violation. Series of digits, variable length.
+- FACILITY_ID: Identifier for a facility in a public water system. Series of digits, variable length.
+- NON_COMPL_PER_BEGIN_DATE: Date when violation has been identified. 2 digit month/2 digit day/4 digit year.
+- NON_COMPL_PER_END_DATE: Date when violation has ended. Ongoing violations have a null value. 2 digit month/2 digit day/4 digit year.
+- CONTAMINANT_CODE: Code representing a contaminant. Series of digits, variable length.
+- VIOL_MEASURE: The amount of the contaminant. Decimal.
+- UNIT_OF_MEASURE: The unit of measure. String.
 
 ### SDWA_FACILITIES.csv
 - PWSID: Unique code for a public water system. Consists of a two-letter state or region code and 7 digits.
-- FACILITY_ID: Identifier for a facility in a public water system.
-- FACILITY_NAME: The name of the facility.
+- FACILITY_ID: Identifier for a facility in a public water system. Series of digits, variable length.
+- FACILITY_NAME: The name of the facility. String. 
 - FACILITY_ACTIVITY_CODE: A single-letter code identifying the facility's operating status.
 - FACILITY_TYPE_CODE: A two-letter code identifying the type of facility.
 - WATER_TYPE_CODE: A two-letter code identifying the water source.
