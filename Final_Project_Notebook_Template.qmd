@@ -1,6 +1,6 @@
 ---
 title: Maryland Drinking Water Quality Violations ETL
-author: Connor Hall,
+author: Connor Hall, Anjali Khatri
 subtitle: "Final project for INST447, Spring 2026"
 format: html
 ---
@@ -109,6 +109,7 @@ where the VALUE_TYPE column was equal to "CONTAMINANT_CODE". The VALUE_CODE and 
 
 The dataframes were then merged. The facilities and locations dataframes were inner merged on the PWSID column. The resulting dataframe, merged_df, was inner merged with the violations dataframe
 on the PWSID and FACILITY_ID columns. Lastly, merged_df was left merged with the contaminant_codes dataframe; the left dataframe (merged_df) merged on the "CONTAMINANT_CODE" column and the right dataframe (contaminant_codes) merged on the "VALUE_CODE" column.
+
 
 ```{python}
 import pandas as pd
@@ -222,6 +223,149 @@ You are encouraged to structure this major section into subsections as you wish,
 
 ```
 
+## Descriptive EDA statistics
+
+```{python}
+
+#import pandas
+import pandas as pd
+
+# load final dataset
+df = merged_df.copy()
+
+# create a list of all of the numeric variables in the dataset
+numeric_cols = ['measure']
+
+# print summary statistics for each measure
+for col in numeric_cols:
+    print(f'\nSummary statistics for {col}')
+    print(f'Minimum: {df[col].min()}')
+    print(f'Maximum: {df[col].max()}')
+    print(f'Mean: {df[col].mean()}')
+    print(f'Median: {df[col].median()}')
+    print(f'Missing values: {df[col].isna().sum()}')
+
+# create a list of all categorical variables in dataset
+categorical_cols = [
+    'pwsid',
+    'facility_id',
+    'facility_name',
+    'county_served',
+    'facility_status',
+    'facility_type_code',
+    'water_type_code',
+    'contaminant_code',
+    'contaminant_name',
+    'unit'
+]
+
+# print frequecies for categorical values
+for col in categorical_cols:
+    print(f'\nFrequency table for {col}')
+    print(df[col].value_counts(dropna=False).sort_values(ascending=False))
+
+# create a list for columns thatshave date values
+date_cols = ['begin_date', 'end_date']
+
+# print earliest recorded date, latest recorded date and number of missing dates
+for col in date_cols:
+    print(f'\nSummary statistics for {col}')
+    print(f'Earliest date: {df[col].min()}')
+    print(f'Latest date: {df[col].max()}')
+    print(f'Missing values: {df[col].isna().sum()}')
+
+# group data by water_type_code and calculate the average contaminant measurement (measure) for each water type
+
+# average contaminant measure by water type
+avg_measure = df.groupby('water_type_code')['measure'].mean()
+print('\nAverage measure by water type')
+print(avg_measure)
+
+# cross-tabulation between facility status and water type
+cross_tab = pd.crosstab(df['facility_status'], df['water_type_code'])
+print('\nCross-tabulation')
+print(cross_tab)
+
+```
+
+## Descriptive EDA visualizations
+
+```{python}
+
+#import matplotlib and seaborn
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# numeric variable visualization
+
+# log transformed histogram
+plt.figure(figsize=(8,5))
+sns.histplot(df['measure'], bins=50, log_scale=True)
+plt.title('Log Distribution of Violation Measurements')
+plt.xlabel('Measurement (log scale)')
+plt.ylabel('Count')
+plt.show()
+
+# categorical variable visualization
+
+categorical_plot_cols = [
+    'facility_status',
+    'facility_type_code',
+    'water_type_code',
+
+]
+
+# create individual plots for facility_status, facility_type_code, water_type_code
+
+for col in categorical_plot_cols:
+    plt.figure(figsize=(8,5))
+    df[col].value_counts().plot(kind='bar')
+    plt.title(f'Frequency of {col}')
+    plt.xlabel(col)
+    plt.ylabel('Count')
+    plt.xticks(rotation=45)
+    plt.show()
+
+# top contaminants only
+top_contaminants = df['contaminant_name'].value_counts().head(10)
+
+plt.figure(figsize=(10,5))
+top_contaminants.plot(kind='bar')
+plt.title('Top 10 Contaminants')
+plt.xlabel('Contaminant')
+plt.ylabel('Count')
+plt.xticks(rotation=75)
+plt.show()
+
+# Variable relationship visualization
+
+# Boxplot: measure by water type
+# compare contaminant measurement values across different water source types
+plt.figure(figsize=(8,5))
+sns.boxplot(data=df, x='water_type_code', y='measure')
+plt.title('Violation Measure by Water Type')
+plt.xlabel('Water Type')
+plt.ylabel('Measurement')
+plt.show()
+
+# Cross-tab visualization
+# compare faciltiy status by water type
+cross_tab.plot(kind='bar', stacked=True, figsize=(8,5))
+plt.title('Facility Status by Water Type')
+plt.xlabel('Facility Status')
+plt.ylabel('Count')
+plt.xticks(rotation=0)
+plt.show()
+
+```
+
+## Descriptive EDA narrative
+
+
+
+## Bias-related EDA code
+
+## Bias-related EDA narrative
 
 # Data Product & Guide
 
