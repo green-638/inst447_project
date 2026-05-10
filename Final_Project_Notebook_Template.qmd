@@ -223,7 +223,25 @@ You are encouraged to structure this major section into subsections as you wish,
 
 ```
 
+Variables: 
+- measure (float): the amount of the contaminant detected
+- pwsid (str): identifier for a public water system
+- facility_id (str): identifier for a facility within a public water system
+- facility_name (str): name of the facility associated with the violation
+- facility_status (str): indicates activeness of facility (A = Active, I = Inactive)
+- facility_type_code (str): type of facility (DS = Distribution System, TP = Treatment Plant, WL = Well, SS = Sampling Station)
+- water_type_code (str): source or type of water (GW = Ground Water, SW = Surface Water, GU = Groundwater Under Influence)
+- contaminant_code (str): code for contaminant
+- contaminant_name (str): name of contaminant
+
+
 ## Descriptive EDA statistics
+
+The Descriptive EDA statistics section summarized key variables from the dataset.
+Computed min, max, mean, median, and missing values on 'measure' variable that identified the detected amount of contaminant.
+Generated frequency tables for categorical variables. 
+Calculated average contaminant measurement grouped by water type .
+Created a cross-tabulation to show the distribution of facility status across different water types.
 
 ```{python}
 
@@ -256,7 +274,6 @@ categorical_cols = [
     'water_type_code',
     'contaminant_code',
     'contaminant_name',
-    'unit'
 ]
 
 # print frequecies for categorical values
@@ -289,6 +306,13 @@ print(cross_tab)
 ```
 
 ## Descriptive EDA visualizations
+
+Visualized the dataset to better understand distributions and relationships.
+Created a log-scaled histogram of the measure variable to handle skewness.
+Created bar graphs for categorical variables to visualize frequency distributions. 
+Created a bar graph for 10 most common contaminants. 
+Created boxplot to compare contaminants across water type.
+Created stacked bar chart of the cross-tabulation to visualize how facility status varies by water type
 
 ```{python}
 
