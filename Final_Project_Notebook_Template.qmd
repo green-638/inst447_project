@@ -204,26 +204,7 @@ print(merged_df)
 
 # Analysis & Evaluation
 
-The text in this section includes:
-
-- descriptions of all variables
-- noteworthy patterns,
-- including discussion of potential sources of bias or unbalanced patterns
-
-You are encouraged to structure this major section into subsections as you wish, and to break up and interweave code chunks, to help with organization and readability.
-
-```{python}
-# The code chunk(s) in this section should include:
-# - descriptive stats for all relevant variables
-# - descriptive stat(s) for any relevant relationships
-# - visualizations for all relevant variables
-# - visualizations for any relevant relationships
-# - code for exploring potential sources of bias, including missing data, unbalanced groups, etc.
-
-
-```
-
-Variables: 
+### Variables: 
 - measure (float): the amount of the contaminant detected
 - pwsid (str): identifier for a public water system
 - facility_id (str): identifier for a facility within a public water system
@@ -385,7 +366,31 @@ plt.show()
 
 ## Descriptive EDA narrative
 
+The descriptive exploratory data analysis demonstrated important patterns in the drinking water violations dataset. 
 
+### Numerical Variables
+A log-transformed histogram was used to make the data easier to visualize because it reduced the effect of the extremely large values and made the smaller measurement patterns easier to see.
+The variable measure, representing contaminant measurement levels, showed a right skewed distribution. This right-hand skewedness was expected because there was a higher likelihood of there being more reporting of small amounts of contaminants than reporting of large amounts of contaminants. 
+The middle value (median) of the measurements was only 0.156, but the largest value was 16,698, indicating the possibility of outliers. 
+
+### Categorical Variables
+The categorical variables related to facility information also demonstrated important patterns. 
+For the facility_status variable, the number of active facilities largely outnumbered the number of inactive facilities. 
+This distribution result was expected because it is more likely that active facilities will continue to monitor and report violations whereas inactive facilities may not have the means or need to monitor or report water quality measures. 
+
+The facility_type_code visualization showed that most of the violations reported came from a small subgroup of facility types. 
+These facility types include distribution systems (DS), sampling stations (SS), treatment plants (TP), and wells (WL). 
+This pattern is plausible because these specific facility types are responsible for drinking water infrastructure. 
+This responsibility means that these facilities may be required to be more stringent about their water quality reporting and monitoring. 
+
+The water_type_code variable showed an unexpected pattern because most records were missing a water type value (NaN). 
+Of the records that did include a water type, almost all were labeled as groundwater (GW), while very few were surface water (SW) or purchased groundwater (GU). 
+This could mean that many water systems did not report their water source type, or that the dataset mainly contains groundwater systems. 
+The relationship analysis further showed that groundwater systems had the highest average contaminant measurements, with an average value of approximately 21.16, compared to 6.54 for surface water systems. 
+The boxplot showed that groundwater systems also had the widest range of measurement values and the largest extreme contaminant measurements possibly indicating outliers. 
+
+The contaminant variables (contaminant_code and contaminant_name) were used to plot the top 10 contaminants measured in the dataset. 
+TTHM, Arsenic, Total Haloacetic Acids (HAA5), and Nitrate were the most common contaminants observed. 
 
 ## Bias-related EDA code
 
