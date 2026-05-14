@@ -7,12 +7,61 @@ format: html
 
 # Executive Summary
 
-The text in this section includes:
+## Overview Summary
 
-- overview summary
-- discussion of audience & purpose
-- conclusions/final discussion
+This project analyzed drinking water violation data from the United States Environmental Protection Agency (EPA) Safe Drinking Water Information System (SDWIS). 
+The target audience of this project is people who have a vested interest in understanding patterns in drinking water contamination violations including environmental researchers, public health officials, regulatory agencies, and policymakers. 
+In order to discern these patterns, raw data from SDWIS had to be cleaned, merged, and transformed. 
+These processes allowed for identification of trends in contaminant violations, facility characteristics, and water source types through exploratory data analysis (EDA).
 
+The analysis used SDWA_VIOLATIONS_ENFORCEMENT.csv, SDWA_FACILITIES.csv, and SDWA_GEOGRAPHIC_AREAS.csv which were pulled directly from the EPA SDWIS. 
+The violations dataset contained information about contaminant violations, including public water system identifiers, facility identifiers, contaminant codes, violation dates, contaminant measurements, and measurement units. 
+The facilities dataset contained information describing water system facilities, including facility names, operational status, facility types, and water source types. 
+The geographic dataset provided county-level geographic information for public water systems. These datasets were filtered, cleaned, and merged into one dataset using shared identifiers like PWSID and FACILITY_ID.
+
+Before performing any data analysis, the imported data needed to be cleaned and transformed. 
+Records with incorrectly formatted PWSID values were removed. 
+Duplicates and extreme invalid outlier measurements were removed. 
+Columns were reordered and renamed for readability and clarity. 
+Exploratory data analysis was then conducted using descriptive statistics and visualizations including histograms, barplots, boxplots, and cross-tabulations.
+
+Post-transformation, exploratory data analysis was used to identify patterns in the data. 
+Contaminant measures were right skewed where it was observed that most records indicated a low contaminant concentration value and there were relatively few records indicating high contaminant concentration value. 
+Active facilities largely outnumber inactive facilities meeting expectations that active systems will continue reporting violations. 
+Groundwater systems (GW) accounted for most of the known water source records and exhibited the highest average contaminant measurements among water types. 
+The most common contaminants included TTHM, Arsenic, Total Haloacetic Acids (HAA5), and Nitrate. This communicated that the majority of water quality violations recorded were from a small subset of contaminants. 
+
+Preparing the data for analysis proved to be a massive challenge for the project. 
+Transforming the data required resolving issues with duplicates, missing values, invalid measurements, and datatypes. 
+Examining the relationships between contaminant levels, facility types, and water source categories was interesting as these trends and relationships can be used to support public health research, water system management, and future environmental decision making.
+
+## Well-Formulated Audience and Purpose
+
+### Target Audience
+
+The primary audience for this project includes:
+- Environmental researchers 
+- Public health officials 
+- Regulatory agencies
+- Policaymakers and lawmakers 
+
+These groups may use the analysis to better understand drinking water contamination trends, reporting patterns, and infrastructure risks associated with public water systems
+
+### Purpose
+
+The purpose of the project was to:
+1. collect and integrate EPA drinking water violation datasets 
+2. clean and transform the data into a usable dataset 
+3. perform exploratory data analysis on contaminant violations and facility characteristics
+4. identify patterns, trends, and irregularities related to contaminant measurements, water sources, and facility operations
+The project focused on using EDA techniques to better understand the structure, quality, and environmental significance of the drinking water violation data.
+
+## Achieved Purpose
+
+The project successfully achieved its intended purpose by producing a cleaned and merged analytical dataset and conducting comprehensive exploratory data analysis on the final variables. 
+This project was also able to navigate challenges including missing data, invalid values, outlier values, duplicate records, and datatype inconsistencies. 
+The analysis identified meaningful trends in contaminant measurements, facility activity, water source distributions, and commonly occurring contaminants. 
+Multiple statistical summaries and visualizations were used to examine both individual variable distributions and relationships between variables, including comparisons of contaminant measurements across water source types and facility categories.
 
 # Source(s) & Extraction
 
