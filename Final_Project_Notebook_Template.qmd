@@ -1,6 +1,6 @@
 ---
 title: Maryland Drinking Water Quality Violations ETL
-author: Connor Hall, Anjali Khatri
+author: Connor Hall, Anjali Khatri, Bryan Mejia
 subtitle: "Final project for INST447, Spring 2026"
 format: html
 ---
@@ -394,18 +394,139 @@ TTHM, Arsenic, Total Haloacetic Acids (HAA5), and Nitrate were the most common c
 
 ## Bias-related EDA code
 
+The bias-related exploratory analysis examined missing values, ongoing violations, and possible imbalances across water system categories and counties.
+
+```{python}
+
+# Import final dataset
+df = merged_df.copy()
+
+# Missing value analysis
+missing_values = df.isna().sum().sort_values(ascending=False)
+missing_percent = (df.isna().mean() * 100).sort_values(ascending=False)
+
+print("Missing Values:")
+print(missing_values)
+
+print("\nMissing Percentage:")
+print(missing_percent)
+
+# visualize missing percentages
+plt.figure(figsize=(10,5))
+missing_percent.plot(kind='bar')
+plt.title('Percentage of Missing Values by Column')
+plt.ylabel('Percent Missing')
+plt.xticks(rotation=45)
+plt.show()
+
+
+# Ongoing violations
+# missing end_date values indicate unresolved or ongoing violations
+df['ongoing_violation'] = df['end_date'].isna()
+
+ongoing_counts = df['ongoing_violation'].value_counts()
+
+print("\nOngoing Violations:")
+print(ongoing_counts)
+
+# visualize ongoing violations
+plt.figure(figsize=(6,4))
+ongoing_counts.plot(kind='bar')
+plt.title('Resolved vs Ongoing Violations')
+plt.xticks([0,1], ['Resolved', 'Ongoing'], rotation=0)
+plt.ylabel('Count')
+plt.show()
+
+
+# County imbalance analysis
+top_counties = df['county_served'].value_counts().head(15)
+
+print("\nTop Counties by Violation Count:")
+print(top_counties)
+
+# visualize county imbalance
+plt.figure(figsize=(12,5))
+top_counties.plot(kind='bar')
+plt.title('Top Counties by Violation Count')
+plt.xlabel('County')
+plt.ylabel('Violations')
+plt.xticks(rotation=45)
+plt.show()
+
+
+# Water type imbalance
+water_type_dist = df['water_type_code'].value_counts(dropna=False)
+
+print("\nWater Type Distribution:")
+print(water_type_dist)
+
+# visualize water type imbalance
+plt.figure(figsize=(8,5))
+water_type_dist.plot(kind='bar')
+plt.title('Distribution of Water Types')
+plt.xlabel('Water Type')
+plt.ylabel('Count')
+plt.xticks(rotation=0)
+plt.show()
+```
+
 ## Bias-related EDA narrative
+
+The bias-related exploratory analysis showed some possible limitations and imbalances in the dataset.
+
+The missing value analysis showed that the water_type_code column had a large amount of missing data, with about 86% of records missing water source information. The county_served column also had missing values for about 24% of records. Missing location and water source information can make it harder to fully compare contamination trends across different areas and water system types.
+
+The water system analysis showed that groundwater systems (GW) made up most of the reported water types, while surface water (SW) and purchased groundwater (GU) appeared much less often. This could mean groundwater systems are more common in the dataset, or that some systems do not report water source information consistently.
+
+The county analysis also showed that some counties appeared much more often than others. Counties such as Lubbock and Midland had higher violation counts than many other counties. These differences could be related to population size, testing frequency, or reporting differences instead of contamination levels alone.
+
+The dataset also mostly contains active facilities, while inactive facilities make up a much smaller part of the data. Active facilities are more likely to continue testing and reporting violations regularly.
+
+Overall, the dataset is useful for identifying water quality trends and violations, but the missing data and reporting differences across facilities and counties should still be considered when looking at the results.
 
 # Data Product & Guide
 
-The text in this section includes:
+The final data product is a cleaned dataset containing drinking water violations, contaminant information, facility details, and county-level geographic information. The dataset was created by merging multiple EPA Safe Drinking Water Act (SDWA) datasets into one table.
 
-- description and "user's guide" for the final data product
-- general info and description on each variable/column in the data product
-  - note: the descriptive stats, etc. should already be in the Analysis section, but if there are any new/transformed variables that were not in that section, those should have descriptive stats and plots here
+The dataset is intended for environmental analysts, researchers, and public health officials interested in studying contamination trends and geographic patterns in drinking water quality.
+
+## Loading the Dataset
+
+The final dataset can be loaded into Python using pandas:
 
 ```{python}
-# The code chunk(s) in this section should include:
-# - The code needed to "finalize" or "export" the final data product.
-
+final_df = merged_df.copy()
+print(final_df.head())
 ```
+
+## Final Dataset Variables
+
+- pwsid: identifier for a public water system
+- violation_id: identifier for a specific violation
+- facility_id: identifier for a facility
+- facility_name: name of the facility
+- county_served: county served by the water system
+- facility_status: whether the facility is active or inactive
+- facility_type_code: type of facility
+- water_type_code: source/type of water
+- begin_date: date the violation began
+- end_date: date the violation ended
+- contaminant_code: contaminant identifier
+- contaminant_name: contaminant name
+- measure: contaminant measurement value
+- unit: unit of measurement
+
+## Exporting Final Dataset
+
+```{python}
+merged_df.to_csv('final_water_quality_dataset.csv', index=False)
+```
+
+
+# Extra Mile
+
+This project required extra work to extract, clean, and merge multiple EPA datasets together. One challenge was standardizing contaminant codes because some datasets stored the values as decimals while others stored them as strings. Regular expression transformations were used to clean and standardize the contaminant codes before merging the datasets.
+
+Additional work was also needed to reduce the size of the original datasets while keeping the important variables needed for analysis. Facility information, geographic data, contaminant reference codes, and violation records were filtered and merged into one final dataset.
+
+The project also included extra exploratory analysis related to missing values, reporting differences, and possible imbalances across water system types and counties.
