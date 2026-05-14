@@ -30,6 +30,7 @@ Contaminant measures were right skewed where it was observed that most records i
 Active facilities largely outnumber inactive facilities meeting expectations that active systems will continue reporting violations. 
 Groundwater systems (GW) accounted for most of the known water source records and exhibited the highest average contaminant measurements among water types. 
 The most common contaminants included TTHM, Arsenic, Total Haloacetic Acids (HAA5), and Nitrate. This communicated that the majority of water quality violations recorded were from a small subset of contaminants. 
+
 Preparing the data for analysis proved to be a massive challenge for the project. 
 Transforming the data required resolving issues with duplicates, missing values, invalid measurements, and datatypes. 
 Examining the relationships between contaminant levels, facility types, and water source categories was interesting as these trends and relationships can be used to support public health research, water system management, and future environmental decision making.
@@ -49,10 +50,10 @@ These groups may use the analysis to better understand drinking water contaminat
 ### Purpose
 
 The purpose of the project was to:
-1.	collect and integrate EPA drinking water violation datasets 
-2.	clean and transform the data into a usable dataset 
-3.	perform exploratory data analysis on contaminant violations and facility characteristics
-4.	identify patterns, trends, and irregularities related to contaminant measurements, water sources, and facility operations
+1. collect and integrate EPA drinking water violation datasets 
+2. clean and transform the data into a usable dataset 
+3. perform exploratory data analysis on contaminant violations and facility characteristics
+4. identify patterns, trends, and irregularities related to contaminant measurements, water sources, and facility operations
 The project focused on using EDA techniques to better understand the structure, quality, and environmental significance of the drinking water violation data.
 
 ## Achieved Purpose
