@@ -7,8 +7,6 @@ format: html
 
 # Executive Summary
 
-## Overview Summary
-
 This project analyzed drinking water violation data from the United States Environmental Protection Agency (EPA) Safe Drinking Water Information System (SDWIS). 
 The target audience of this project is people who have a vested interest in understanding patterns in drinking water contamination violations including environmental researchers, public health officials, regulatory agencies, and policymakers. 
 In order to discern these patterns, raw data from SDWIS had to be cleaned, merged, and transformed. 
@@ -25,8 +23,8 @@ Duplicates and extreme invalid outlier measurements were removed.
 Columns were reordered and renamed for readability and clarity. 
 Exploratory data analysis was then conducted using descriptive statistics and visualizations including histograms, barplots, boxplots, and cross-tabulations.
 
-Post-transformation, exploratory data analysis was used to identify patterns in the data. 
-Contaminant measures were right skewed where it was observed that most records indicated a low contaminant concentration value and there were relatively few records indicating high contaminant concentration value. 
+Post-transformation and exploratory data analysis were used to identify patterns in the data. 
+Contaminant measures were right skewed where it was observed that most records indicated a low contaminant concentration value and there were relatively few records indicating high contaminant concentration values. 
 Active facilities largely outnumber inactive facilities meeting expectations that active systems will continue reporting violations. 
 Groundwater systems (GW) accounted for most of the known water source records and exhibited the highest average contaminant measurements among water types. 
 The most common contaminants included TTHM, Arsenic, Total Haloacetic Acids (HAA5), and Nitrate. This communicated that the majority of water quality violations recorded were from a small subset of contaminants. 
@@ -43,7 +41,7 @@ The primary audience for this project includes:
 - Environmental researchers 
 - Public health officials 
 - Regulatory agencies
-- Policaymakers and lawmakers 
+- Policymakers and lawmakers 
 
 These groups may use the analysis to better understand drinking water contamination trends, reporting patterns, and infrastructure risks associated with public water systems
 
@@ -62,6 +60,12 @@ The project successfully achieved its intended purpose by producing a cleaned an
 This project was also able to navigate challenges including missing data, invalid values, outlier values, duplicate records, and datatype inconsistencies. 
 The analysis identified meaningful trends in contaminant measurements, facility activity, water source distributions, and commonly occurring contaminants. 
 Multiple statistical summaries and visualizations were used to examine both individual variable distributions and relationships between variables, including comparisons of contaminant measurements across water source types and facility categories.
+
+# Extra Mile
+
+This project required extra work to extract, clean, and merge multiple EPA datasets together. One challenge was standardizing contaminant codes because some datasets stored the values as decimals while others stored them as strings. Regular expression transformations were used to clean and standardize the contaminant codes before merging the datasets.
+Additional work was also needed to reduce the size of the original datasets while keeping the important variables needed for analysis. Facility information, geographic data, contaminant reference codes, and violation records were filtered and merged into one final dataset.
+The project also included extra exploratory analysis related to missing values, reporting differences, and possible imbalances across water system types and counties.
 
 # Source(s) & Extraction
 
@@ -263,15 +267,19 @@ print(merged_df)
 - water_type_code (str): source or type of water (GW = Ground Water, SW = Surface Water, GU = Groundwater Under Influence)
 - contaminant_code (str): code for contaminant
 - contaminant_name (str): name of contaminant
+- begin_date (datetime): date violation was identified
+- end_date (datetime): date violation ended
+- unit (str): unit of measurement
 
 
 ## Descriptive EDA statistics
 
 The Descriptive EDA statistics section summarized key variables from the dataset.
-Computed min, max, mean, median, and missing values on 'measure' variable that identified the detected amount of contaminant.
+Computed min, max, mean, median, and the number of missing values on 'measure' variable that identified the detected amount of contaminant.
 Generated frequency tables for categorical variables. 
-Calculated average contaminant measurement grouped by water type .
+Calculated average contaminant measurement grouped by water type.
 Created a cross-tabulation to show the distribution of facility status across different water types.
+
 
 ```{python}
 
@@ -298,12 +306,12 @@ categorical_cols = [
     'pwsid',
     'facility_id',
     'facility_name',
-    'county_served',
     'facility_status',
     'facility_type_code',
     'water_type_code',
     'contaminant_code',
     'contaminant_name',
+    'unit'
 ]
 
 # print frequecies for categorical values
@@ -311,7 +319,7 @@ for col in categorical_cols:
     print(f'\nFrequency table for {col}')
     print(df[col].value_counts(dropna=False).sort_values(ascending=False))
 
-# create a list for columns thatshave date values
+# create a list for columns with date values
 date_cols = ['begin_date', 'end_date']
 
 # print earliest recorded date, latest recorded date and number of missing dates
@@ -321,10 +329,10 @@ for col in date_cols:
     print(f'Latest date: {df[col].max()}')
     print(f'Missing values: {df[col].isna().sum()}')
 
-# group data by water_type_code and calculate the average contaminant measurement (measure) for each water type
+# group data by water_type_code and unit and calculate the average contaminant measurement (measure) for each water type
 
 # average contaminant measure by water type
-avg_measure = df.groupby('water_type_code')['measure'].mean()
+avg_measure = df.groupby(['water_type_code', 'unit'])['measure'].mean()
 print('\nAverage measure by water type')
 print(avg_measure)
 
@@ -343,6 +351,7 @@ Created bar graphs for categorical variables to visualize frequency distribution
 Created a bar graph for 10 most common contaminants. 
 Created boxplot to compare contaminants across water type.
 Created stacked bar chart of the cross-tabulation to visualize how facility status varies by water type
+
 
 ```{python}
 
@@ -365,22 +374,65 @@ plt.show()
 categorical_plot_cols = [
     'facility_status',
     'facility_type_code',
-    'water_type_code',
-
+    'water_type_code'
 ]
 
-# create individual plots for facility_status, facility_type_code, water_type_code
+# create plots for categorical variables
 
 for col in categorical_plot_cols:
     plt.figure(figsize=(8,5))
-    df[col].value_counts().plot(kind='bar')
+    df[col].value_counts().head(10).plot(kind='bar')
     plt.title(f'Frequency of {col}')
     plt.xlabel(col)
     plt.ylabel('Count')
     plt.xticks(rotation=45)
     plt.show()
 
-# top contaminants only
+
+# create plots for begin_date and end_date
+
+# plot months
+months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
+begin_month = df['begin_date'].dt.month.value_counts().sort_index().values.tolist()
+end_month = df['end_date'].dt.month.value_counts().sort_index().values.tolist()
+
+plt.figure(figsize=(10,5))
+plt.bar(months, begin_month, color = 'orange')
+plt.bar(months, end_month, bottom = begin_month, color = 'blue')
+plt.title('Violations per month by begin and end date')
+plt.xlabel('Month')
+plt.ylabel('Count')
+plt.legend(['Begin date', 'End date'])
+plt.show()
+
+# plot years
+begin_year = df['begin_date'].dt.year.value_counts().sort_index()
+end_year = df['end_date'].dt.year.value_counts().sort_index()
+
+begin_year_list = begin_year.index.tolist()
+end_year_list = end_year.index.tolist()
+
+year_range = list(range(1902,2027))
+for yr in year_range:
+    if yr not in begin_year_list:
+        begin_year.at[yr] = 0
+    if yr not in end_year_list:
+        end_year.at[yr] = 0
+
+begin_year = begin_year.sort_index().values.tolist()
+end_year = end_year.sort_index().values.tolist()
+
+plt.figure(figsize=(10,5))
+plt.bar(year_range, begin_year, color = 'orange')
+plt.bar(year_range, end_year, bottom = begin_year, color = 'blue')
+plt.title('Violations per year by begin and end date')
+plt.xlabel('Year')
+plt.ylabel('Count')
+plt.legend(['Begin year', 'End year'])
+plt.show()
+
+
+# most frequently occurring contaminants
 top_contaminants = df['contaminant_name'].value_counts().head(10)
 
 plt.figure(figsize=(10,5))
@@ -393,17 +445,8 @@ plt.show()
 
 # Variable relationship visualization
 
-# Boxplot: measure by water type
-# compare contaminant measurement values across different water source types
-plt.figure(figsize=(8,5))
-sns.boxplot(data=df, x='water_type_code', y='measure')
-plt.title('Violation Measure by Water Type')
-plt.xlabel('Water Type')
-plt.ylabel('Measurement')
-plt.show()
-
 # Cross-tab visualization
-# compare faciltiy status by water type
+# compare facility status by water type
 cross_tab.plot(kind='bar', stacked=True, figsize=(8,5))
 plt.title('Facility Status by Water Type')
 plt.xlabel('Facility Status')
@@ -413,16 +456,16 @@ plt.show()
 
 ```
 
+
+
 ## Descriptive EDA narrative
 
 The descriptive exploratory data analysis demonstrated important patterns in the drinking water violations dataset. 
 
-### Numerical Variables
 A log-transformed histogram was used to make the data easier to visualize because it reduced the effect of the extremely large values and made the smaller measurement patterns easier to see.
 The variable measure, representing contaminant measurement levels, showed a right skewed distribution. This right-hand skewedness was expected because there was a higher likelihood of there being more reporting of small amounts of contaminants than reporting of large amounts of contaminants. 
 The middle value (median) of the measurements was only 0.156, but the largest value was 16,698, indicating the possibility of outliers. 
 
-### Categorical Variables
 The categorical variables related to facility information also demonstrated important patterns. 
 For the facility_status variable, the number of active facilities largely outnumbered the number of inactive facilities. 
 This distribution result was expected because it is more likely that active facilities will continue to monitor and report violations whereas inactive facilities may not have the means or need to monitor or report water quality measures. 
@@ -438,12 +481,20 @@ This could mean that many water systems did not report their water source type, 
 The relationship analysis further showed that groundwater systems had the highest average contaminant measurements, with an average value of approximately 21.16, compared to 6.54 for surface water systems. 
 The boxplot showed that groundwater systems also had the widest range of measurement values and the largest extreme contaminant measurements possibly indicating outliers. 
 
+The begin_date and end_date visualizations showed that they alternate in frequency by month and that violations have decreased since the 2010s.  
+It was expected that violations would decrease because of stricter health and environmental regulations and increased knowledge of the health effects of violations.
+However, it was unexpected that February, May, August, and November had very few violations, while the other months were nearly equal. This may be caused by reporting processes not taking place during those months.
+
 The contaminant variables (contaminant_code and contaminant_name) were used to plot the top 10 contaminants measured in the dataset. 
 TTHM, Arsenic, Total Haloacetic Acids (HAA5), and Nitrate were the most common contaminants observed. 
+
+The facility status by water type visualization showed that nearly all violations involved groundwater and that most of the violating facilities are active.  
+This is expected because ground water is one of the most used sources of water and closing facilities due to violations would be costly, so most remain active.
 
 ## Bias-related EDA code
 
 The bias-related exploratory analysis examined missing values, ongoing violations, and possible imbalances across water system categories and counties.
+
 
 ```{python}
 
@@ -531,12 +582,10 @@ Overall, the dataset is useful for identifying water quality trends and violatio
 
 # Data Product & Guide
 
-The final data product is a cleaned dataset containing drinking water violations, contaminant information, facility details, and county-level geographic information. The dataset was created by merging multiple EPA Safe Drinking Water Act (SDWA) datasets into one table.
-The dataset is intended for environmental analysts, researchers, and public health officials interested in studying contamination trends and geographic patterns in drinking water quality.
+The final data product is a cleaned dataset containing drinking water violations, contaminant information, facility details, and county-level geographic information. The dataset was created by merging multiple EPA Safe Drinking Water Act (SDWA) datasets into one table. The data can be accessed by running the code cells in the Extracting & Merging and Transformation Processes sections, and then running the code cells below.
+The dataset is intended for environmental analysts, researchers, and public health officials interested in studying contamination trends and geographic patterns in drinking water quality.  
 
-## Loading the Dataset
-
-The final dataset can be loaded into Python using pandas:
+## Loading and Export the Dataset
 
 ```{python}
 final_df = merged_df.copy()
@@ -565,10 +614,3 @@ print(final_df.head())
 ```{python}
 merged_df.to_csv('final_water_quality_dataset.csv', index=False)
 ```
-
-
-# Extra Mile
-
-This project required extra work to extract, clean, and merge multiple EPA datasets together. One challenge was standardizing contaminant codes because some datasets stored the values as decimals while others stored them as strings. Regular expression transformations were used to clean and standardize the contaminant codes before merging the datasets.
-Additional work was also needed to reduce the size of the original datasets while keeping the important variables needed for analysis. Facility information, geographic data, contaminant reference codes, and violation records were filtered and merged into one final dataset.
-The project also included extra exploratory analysis related to missing values, reporting differences, and possible imbalances across water system types and counties.
